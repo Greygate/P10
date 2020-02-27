@@ -106,3 +106,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c94cf7a1723620448935ca8f0aa2c722, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  droneSpeed: 5
+  lx: 0
+  ly: 0
+  rx: 0
+  ry: 0
+  height: 1

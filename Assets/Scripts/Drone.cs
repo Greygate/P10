@@ -5,6 +5,18 @@ public class Drone : MonoBehaviour
 {
     public float droneSpeed = 5f;
 
+    [Range(-1, 1)]
+    public float lx = 0f;
+    [Range(-1, 1)]
+    public float ly = 0f;
+    [Range(-1, 1)]
+    public float rx = 0f;
+    [Range(-1, 1)]
+    public float ry = 0f;
+    [Range(1, 5)]
+    public int height = 1;
+
+
     Vector3 startPosition;
 
     bool alerted = false;
@@ -17,26 +29,16 @@ public class Drone : MonoBehaviour
         //Subscribe to Tello connection events. Called when connected/disconnected.
         Tello.onConnection += (Tello.ConnectionState newState) =>
         {
-            if (newState == Tello.ConnectionState.Connected)
-            {
-                Debug.Log("Tello connected!");
-                //When connected update maxHeight to 5 meters
-                Tello.SetMaxHeight(1);
-            }
             //Show connection messages.
-            Debug.Log($"Tello State: {newState.ToString()}");
+            Debug.Log($"Tello connection: {newState.ToString()}");
         };
 
         //subscribe to Tello update events. Called when update data arrives from drone.
         Tello.onUpdate += (int newState) =>
         {
-            //Debug.Log($"Tello connection state: {Tello.connectionState.ToString()}");
-            //Debug.Log($"Tello fly data: {Tello.state.ToString()}");
-            //Debug.Log("FlyMode:" + newState.flyMode + " Height:" + newState.height);
-            //Debug.Log(newState);
+            Debug.Log(newState);
         };
 
-        Debug.Log("Trying to connect to Trello");
         Tello.StartConnecting();//Start trying to connect.
     }
 
@@ -50,7 +52,7 @@ public class Drone : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Return))
         {
-            Debug.Log($"Old state: {Tello.state.ToString()} (Flying: {Tello.state.flying})");
+            Debug.Log($"Old state: {Tello.state.ToString()}");
             if (Tello.state.flying)
             {
                 Debug.Log("Landing");
@@ -61,17 +63,17 @@ public class Drone : MonoBehaviour
                 Debug.Log("Taking off");
                 Tello.TakeOff();
             }
-            Debug.Log($"New state: {Tello.state.ToString()} (Flying: {Tello.state.flying})");
+            Debug.Log($"New state: {Tello.state.ToString()}");
         }
 
-        //transform.Translate(Input.GetAxis("Vertical") * Vector3.up * Time.deltaTime * droneSpeed);
-
-        //transform.Translate(Input.GetAxis("ForwardsBack") * Vector3.forward * Time.deltaTime * droneSpeed);
-
-        //transform.Translate(Input.GetAxis("Horizontal") * Vector3.right * Time.deltaTime * droneSpeed);
+        if (Tello.connectionState == Tello.ConnectionState.Connected)
+        {
+            Tello.controllerState.SetAxis(lx, ly, rx, ry);
+            Tello.SetMaxHeight(height);
+        }
     }
 
-    private void OnDisable()
+    void OnApplicationQuit()
     {
         Tello.StopConnecting();
     }

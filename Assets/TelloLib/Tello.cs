@@ -17,12 +17,9 @@ namespace TelloLib
         private static int wifiStrength = 0;
         public static bool connected = false;
 
-        public delegate void updateDeligate(int cmdId);
-        public static event updateDeligate onUpdate;
-        public delegate void connectionDeligate(ConnectionState newState);
-        public static event connectionDeligate onConnection;
-        public delegate void videoUpdateDeligate(byte[] data);
-        public static event videoUpdateDeligate onVideoData;
+        public static event Action<int> onUpdate;
+        public static event Action<ConnectionState> onConnection;
+        public static event Action<byte[]> onVideoData;
 
         public static string picPath;//todo redo this.
         public static string picFilePath;//todo redo this.
@@ -44,7 +41,7 @@ namespace TelloLib
 
         private static CancellationTokenSource cancelTokens;//used to cancel listeners
 
-		private static CancellationTokenSource masterCancelTokens = new CancellationTokenSource();
+		private static CancellationTokenSource masterCancelTokens = new CancellationTokenSource();//For Unity
 
         public static void TakeOff()
         {
@@ -492,9 +489,6 @@ namespace TelloLib
 
                                 StartHeartbeat();
                                 RequestIframe();
-                                //for(int i=74;i<80;i++)
-                                //queryUnk(i);
-                                //Console.WriteLine("Tello connected!");
                                 continue;
                             }
                         }
@@ -717,7 +711,7 @@ namespace TelloLib
 
         }
 
-        public static Action<float[]> getControllerCallback;
+        public static Func<float[]> getControllerCallback;
 
         private static void StartHeartbeat()
         {
@@ -743,7 +737,7 @@ namespace TelloLib
                             if ((tick % iFrameRate) == 0)
                                 RequestIframe();
                         }
-                        Thread.Sleep(50);//Often enough?
+                        await Task.Delay(50);//Often enough?
                     }
                     catch (Exception ex)
                     {
@@ -804,9 +798,9 @@ namespace TelloLib
                             case ConnectionState.Connecting:
                             case ConnectionState.Connected:
                                 var elapsed = DateTime.Now - lastMessageTime;
-                                if (elapsed.Seconds > 5)//1 second timeout.
+                                if (elapsed.Seconds > 5)
                                 {
-                                    Console.WriteLine("Connection timeout :");
+                                    // Connection timeout
                                     Disconnect();
                                 }
                                 break;
@@ -814,7 +808,7 @@ namespace TelloLib
                                 lastMessageTime = DateTime.Now;//reset timeout so we have time to recover if enabled.
                                 break;
                         }
-                        Thread.Sleep(500);
+                        await Task.Delay(500);
                     }
                     catch (Exception ex)
                     {
