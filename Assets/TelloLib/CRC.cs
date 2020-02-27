@@ -32,7 +32,7 @@
             return j;
         }
         //write fsc16 crc into the last 2 bytes of the array.
-        public static void CalcCrc(byte[] bytes, int len)
+        public static void CalcCRC(byte[] bytes, int len)
         {
             if ((bytes == null) || (len <= 2))
             {
