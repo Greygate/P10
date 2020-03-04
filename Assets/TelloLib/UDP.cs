@@ -29,7 +29,7 @@ namespace TelloLib
             return new Received()
             {
                 bytes = result.Buffer.ToArray(),
-                Message = Encoding.ASCII.GetString(result.Buffer, 0, result.Buffer.Length),
+                Message = Encoding.UTF8.GetString(result.Buffer, 0, result.Buffer.Length),
                 Sender = result.RemoteEndPoint
             };
         }
@@ -53,7 +53,7 @@ namespace TelloLib
 
         public void Reply(string message, IPEndPoint endpoint)
         {
-            var datagram = Encoding.ASCII.GetBytes(message);
+            var datagram = Encoding.UTF8.GetBytes(message);
             Client.Send(datagram, datagram.Length, endpoint);
         }
 
@@ -73,7 +73,7 @@ namespace TelloLib
 
         public void Send(string message)
         {
-            var datagram = Encoding.ASCII.GetBytes(message);
+            var datagram = Encoding.UTF8.GetBytes(message);
             Client.Send(datagram, datagram.Length);
         }
         public void Send(byte[] message)

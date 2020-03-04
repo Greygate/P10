@@ -8,14 +8,23 @@ using System.Threading.Tasks;
 
 namespace TelloLib
 {
-    public class Tello
+    public enum ConnectionState
+    {
+        Disconnected,
+        Connecting,
+        Connected,
+        Paused,//used to keep from disconnecting when starved for input.
+        UnPausing//Transition. Never stays in this state.
+    }
+
+    public static class Tello
     {
         private static UdpUser client;
         private static DateTime lastMessageTime;//for connection timeouts.
 
         public static FlyData state = new FlyData();
+        public static bool Connected { get; private set; } = false;
         private static int wifiStrength = 0;
-        public static bool connected = false;
 
         public static event Action<int> onUpdate;
         public static event Action<ConnectionState> onConnection;
@@ -29,15 +38,24 @@ namespace TelloLib
 
         private static ushort sequence = 1;
 
-        public enum ConnectionState
+        private static ConnectionState p_connectionState = ConnectionState.Disconnected;
+        public static ConnectionState ConnectionState
         {
-            Disconnected,
-            Connecting,
-            Connected,
-            Paused,//used to keep from disconnecting when starved for input.
-            UnPausing//Transition. Never stays in this state.
+            get
+            {
+                return p_connectionState;
+            }
+            set
+            {
+                p_connectionState = value;
+
+                if (value == ConnectionState.Connected && Connected)
+                    return;
+
+                onConnection?.Invoke(value);
+            }
         }
-        public static ConnectionState connectionState = ConnectionState.Disconnected;
+        public static string DisconnectReason { get; private set; }
 
         private static CancellationTokenSource cancelTokens;//used to cancel listeners
 
@@ -79,7 +97,7 @@ namespace TelloLib
 
             //payload
             packet[9] = (byte)(height & 0xff);
-            packet[10] = (byte)((height >>8) & 0xff);
+            packet[10] = (byte)((height >> 8) & 0xff);
 
             SetPacketSequence(packet);
             SetPacketCRCs(packet);
@@ -316,10 +334,10 @@ namespace TelloLib
             //packet[9] = (byte)(fileid & 0xff);
             //packet[10] = (byte)((fileid >> 8) & 0xff);
 
-            packet[11] = ((byte)(int)(0xFF & size));
-            packet[12] = ((byte)(int)(size >> 8 & 0xFF));
-            packet[13] = ((byte)(int)(size >> 16 & 0xFF));
-            packet[14] = ((byte)(int)(size >> 24 & 0xFF));
+            packet[11] = (byte)(0xFF & size);
+            packet[12] = (byte)(size >> 8 & 0xFF);
+            packet[13] = (byte)(size >> 16 & 0xFF);
+            packet[14] = (byte)(size >> 24 & 0xFF);
             SetPacketSequence(packet);
             SetPacketCRCs(packet);
 
@@ -359,10 +377,10 @@ namespace TelloLib
             packet[10] = ba[0];
             packet[11] = ba[1];
 
-            packet[12] = ((byte)(int)(0xFF & n2));
-            packet[13] = ((byte)(int)(n2 >> 8 & 0xFF));
-            packet[14] = ((byte)(int)(n2 >> 16 & 0xFF));
-            packet[15] = ((byte)(int)(n2 >> 24 & 0xFF));
+            packet[12] = (byte)(0xFF & n2);
+            packet[13] = (byte)((n2 >> 8) & 0xFF);
+            packet[14] = (byte)(n2 >> 16 & 0xFF);
+            packet[15] = (byte)(n2 >> 24 & 0xFF);
 
             //ba = BitConverter.GetBytes(n2);
             //packet[12] = ba[0];
@@ -393,7 +411,7 @@ namespace TelloLib
 
         public static void XsetAxis(float[] axis)
         {
-//            joyAxis = axis.Take(5).ToArray(); ;
+            //joyAxis = axis.Take(5).ToArray(); ;
             //joyAxis[4] = axis[7];
             //joyAxis[3] = axis[11];
         }
@@ -403,15 +421,9 @@ namespace TelloLib
             //kill listeners
             cancelTokens.Cancel();
             //client.Client.Close();
-            connected = false;
+            Connected = false;
 
-            if (connectionState != ConnectionState.Disconnected)
-            {
-                //if changed to disconnect send event
-                onConnection?.Invoke(ConnectionState.Disconnected);
-            }
-
-            connectionState = ConnectionState.Disconnected;
+            ConnectionState = ConnectionState.Disconnected;
 
         }
         private static void Connect()
@@ -419,9 +431,7 @@ namespace TelloLib
             //Console.WriteLine("Connecting to tello.");
             client = UdpUser.ConnectTo("192.168.10.1", 8889);
 
-            connectionState = ConnectionState.Connecting;
-            //send event
-            onConnection?.Invoke(connectionState);
+            ConnectionState = ConnectionState.Connecting;
 
             byte[] connectPacket = Encoding.UTF8.GetBytes("conn_req:\x00\x00");
             connectPacket[connectPacket.Length - 2] = 0x96;
@@ -433,18 +443,16 @@ namespace TelloLib
         public static void ConnectionSetPause(bool bPause)
         {
             //NOTE only pause if connected and only unpause (connect) when paused.
-            if (bPause && connectionState == ConnectionState.Connected)
+            if (bPause && ConnectionState == ConnectionState.Connected)
             {
-                connectionState = ConnectionState.Paused;
-                //send event
-                onConnection.Invoke(connectionState);
+                ConnectionState = ConnectionState.Paused;
             }
-            else if (bPause ==false && connectionState == ConnectionState.Paused)
+            else if (bPause ==false && ConnectionState == ConnectionState.Paused)
             {
                 //NOTE:send unpause and not connection event
-                onConnection.Invoke(ConnectionState.UnPausing);
+                onConnection?.Invoke(ConnectionState.UnPausing);
 
-                connectionState = ConnectionState.Connected;
+                ConnectionState = ConnectionState.Connected;
             }
         }
 
@@ -478,14 +486,12 @@ namespace TelloLib
                         var received = await client.Receive();
                         lastMessageTime = DateTime.Now;//for timeouts
 
-                        if(connectionState == ConnectionState.Connecting)
+                        if(ConnectionState == ConnectionState.Connecting)
                         {
                             if(received.Message.StartsWith("conn_ack"))
                             {
-                                connected = true;
-                                connectionState = ConnectionState.Connected;
-                                //send event
-                                onConnection.Invoke(connectionState);
+                                ConnectionState = ConnectionState.Connected;
+                                Connected = true;
 
                                 StartHeartbeat();
                                 RequestIframe();
@@ -729,21 +735,24 @@ namespace TelloLib
                         if (token.IsCancellationRequested)
                             break;
 
-                        if (connectionState == ConnectionState.Connected)//only send if not paused
+                        if (ConnectionState != ConnectionState.Connected)//only send if not paused
                         {
-                            SendControllerUpdate();
-
-                            tick++;
-                            if ((tick % iFrameRate) == 0)
-                                RequestIframe();
+                            await Task.Delay(1000);
+                            continue;
                         }
+                        SendControllerUpdate();
+
+                        tick++;
+                        if ((tick % iFrameRate) == 0)
+                            RequestIframe();
+
                         await Task.Delay(50);//Often enough?
                     }
                     catch (Exception ex)
                     {
                         Console.WriteLine("Heatbeat error:" + ex.Message);
                         if (ex.Message.StartsWith("Access denied") //Denied means app paused
-                            && connectionState != ConnectionState.Paused)
+                            && ConnectionState != ConnectionState.Paused)
                         {
                             //Can this happen?
                             Console.WriteLine("Heatbeat: access denied and not paused:" + ex.Message);
@@ -763,7 +772,8 @@ namespace TelloLib
             }, token);
         }
 
-		public static void StopConnecting() {
+		public static void StopConnecting()
+        {
 			masterCancelTokens.Cancel();
 		}
 
@@ -775,18 +785,18 @@ namespace TelloLib
             //Thread to handle connecting.
             Task.Factory.StartNew(async () =>
             {
-                var timeout = new TimeSpan(3000);//3 second connection timeout
                 while (true)
                 {
                     try
                     {
-                        if (token.IsCancellationRequested) {
+                        if (token.IsCancellationRequested)
+                        {
 							if (cancelTokens != null)
 								cancelTokens.Cancel();
 							break;
 						}
 
-                        switch (connectionState)
+                        switch (ConnectionState)
                         {
                             case ConnectionState.Disconnected:
                                 Connect();
@@ -856,7 +866,7 @@ namespace TelloLib
 
         public static void SendControllerUpdate()
         {
-            if (!connected)
+            if (!Connected)
                 return;
 
             var boost = 0.0f;
@@ -889,7 +899,7 @@ namespace TelloLib
             }
         }
 
-        Dictionary<int, string> cmdIdLookup = new Dictionary<int, string>
+        static Dictionary<int, string> cmdIdLookup = new Dictionary<int, string>
             {
                 { 26, "Wifi" },//2 bytes. Strength, Disturb.
                 { 53, "Light" },//1 byte?

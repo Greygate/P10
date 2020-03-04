@@ -1,6 +1,6 @@
 ﻿namespace TelloLib
 {
-    class CRC
+    static class CRC
     {
         //Utils to calculate packet CRCs
         //FCS crc

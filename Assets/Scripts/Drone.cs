@@ -15,7 +15,7 @@ public class Drone : MonoBehaviour
     void Start()
     {
         //Subscribe to Tello connection events. Called when connected/disconnected.
-        Tello.onConnection += (Tello.ConnectionState newState) =>
+        Tello.onConnection += (ConnectionState newState) =>
         {
             //Show connection messages.
             Debug.Log($"Tello connection: {newState.ToString()}");
@@ -62,7 +62,7 @@ public class Drone : MonoBehaviour
             }
         }
 
-        if (Tello.connectionState == Tello.ConnectionState.Connected)
+        if (Tello.ConnectionState == ConnectionState.Connected)
         {
             Tello.controllerState.SetAxis(Input.GetAxis("Rotate") * droneSpeed / 100, Input.GetAxis("Levitate") * droneSpeed / 100, Input.GetAxis("LRTranslate") * droneSpeed / 100, Input.GetAxis("FBTranslate") * droneSpeed / 100);
             Tello.SetMaxHeight(height);
