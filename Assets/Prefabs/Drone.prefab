@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 2081628051096083921}
   - component: {fileID: 8405142199453373607}
   - component: {fileID: -3809490048618903246}
+  - component: {fileID: 5835198247755225057}
   m_Layer: 0
   m_Name: Drone
   m_TagString: Untagged
@@ -107,8 +108,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   droneSpeed: 5
-  lx: 0
-  ly: 0
-  rx: 0
-  ry: 0
   height: 1
+--- !u!114 &5835198247755225057
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3323528225926703078}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: febf35da11ce9384cad7031fb92500f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  pathVisualPrefab: {fileID: 8607459404924698806, guid: 9275236d30d321a439f4d0e3604646cd,
+    type: 3}

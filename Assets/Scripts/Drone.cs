@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using TelloLib;
 
+[RequireComponent(typeof(PathVisualizer))]
 public class Drone : MonoBehaviour
 {
     [Range(1, 100)]
@@ -11,9 +12,16 @@ public class Drone : MonoBehaviour
 
     bool alerted = false;
 
+    Vector3 startPosition;
+
+    PathVisualizer pathVisualizer;
+
     // Start is called before the first frame update
     void Start()
     {
+        startPosition = transform.position;
+        pathVisualizer = GetComponent<PathVisualizer>();
+
         //Subscribe to Tello connection events. Called when connected/disconnected.
         Tello.onConnection += (ConnectionState newState) =>
         {
@@ -34,7 +42,7 @@ public class Drone : MonoBehaviour
     {
         if (alerted)
         {
-            // Make path from start position to current position
+            pathVisualizer.CreatePath(new Vector3[] { startPosition, transform.position });
         }
 
         if (Input.GetKeyDown(KeyCode.Return))
