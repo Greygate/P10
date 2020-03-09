@@ -26,7 +26,7 @@ public class Drone : MonoBehaviour
 
         if (alerted)
         {
-            // Make path from start position to current position
+            pathVisualizer.CreatePath(new Vector3[] { startPosition, transform.position });
         }
 
         if (Input.GetKeyDown(KeyCode.Return))
