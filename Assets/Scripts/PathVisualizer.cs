@@ -10,6 +10,8 @@ public class PathVisualizer : MonoBehaviour
 
     public void CreatePath(Vector3[] pathPositions)
     {
+        ResetPath();
+
         if (pathPositions.Length < 2)
             return;
 
@@ -26,6 +28,12 @@ public class PathVisualizer : MonoBehaviour
             CreatePathPositionsBetween(pathPositions[0], pathPositions[1]);
 
         VisualizePath();
+    }
+
+    public void ResetPath()
+    {
+        ClearPath();
+        pathPositions.Clear();
     }
 
     void CreatePathPositionsBetween(Vector3 startPos, Vector3 endPos)

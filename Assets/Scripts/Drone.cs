@@ -10,6 +10,7 @@ public class Drone : MonoBehaviour
     Transform targetPos;
 
     bool alerted = false;
+    bool hasPath = false;
 
     Navigation navigation;
     PathVisualizer pathVisualizer;
@@ -29,8 +30,21 @@ public class Drone : MonoBehaviour
 
         if (alerted)
         {
-            pathVisualizer.CreatePath(new Vector3[] { navigation.GetStartPosition(), transform.position });
+            if (!hasPath)
+            {
+                pathVisualizer.CreatePath(new Vector3[] { navigation.GetStartPosition(), targetPos.position });
+                hasPath = true;
+            }
         }
+        else
+        {
+            if (hasPath)
+            {
+                pathVisualizer.ResetPath();
+                hasPath = false;
+            }
+        }
+            
 
         if (Input.GetKeyDown(KeyCode.Return))
         {
@@ -48,9 +62,7 @@ public class Drone : MonoBehaviour
                 }
 
                 if (Tello.state.batteryLow)
-                {
                     Debug.LogWarning("Battery low");
-                }
 
                 Debug.Log("Taking off");
                 Tello.TakeOff();
@@ -199,6 +211,11 @@ public class Drone : MonoBehaviour
             {
                 Debug.Log("Can't perform any actions when the drone is not flying... duh..");
             }
+        }
+
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            alerted = !alerted;
         }
     }
 
