@@ -52,6 +52,7 @@ public class Navigation : MonoBehaviour
 
     public void MoveForwards()
     {
+        Debug.Log("Navigation: Moving forwards");
         navArray.MoveForwards();
     }
     public void MoveBackwards()
@@ -68,6 +69,10 @@ public class Navigation : MonoBehaviour
     }
 
     public Vector3 GetCurrentPosition()
+    {
+        return GetDronePosition() - navArray.startPos;
+    }
+    public Vector3 GetWantedPosition()
     {
         return navArray.currentPos;
     }
@@ -288,7 +293,10 @@ public class Navigation : MonoBehaviour
 
         public void MoveForwards()
         {
+            Debug.Log("NavArray: Moving forwards");
+            Debug.Log($"NavArray: First position: {currentPos}");
             currentPos.z += 1;
+            Debug.Log($"NavArray: Second position: {currentPos}");
         }
         public void MoveBackwards()
         {

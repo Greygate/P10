@@ -5,6 +5,8 @@ using TelloLib;
 public class Drone : MonoBehaviour
 {
     public bool debug = false;
+    [SerializeField]
+    Transform targetPos;
 
     bool alerted = false;
 
@@ -13,21 +15,6 @@ public class Drone : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        /*
-        //Subscribe to Tello connection events. Called when connected/disconnected.
-        Tello.onConnection += (ConnectionState newState) =>
-        {
-            //Show connection messages.
-            Debug.Log($"Tello connection: {newState.ToString()}");
-        };
-
-        Tello.onUpdate += (int newState) =>
-        {
-            Debug.Log($"Current Loc: x:{Tello.state.posX}, y:{Tello.state.posY}, z:{Tello.state.posZ}, remaining fly time:{Tello.state.droneFlyTimeLeft}");
-        };
-        */
-
-        //Start trying to connect.
         navigation = GetComponent<Navigation>();
     }
 
@@ -35,6 +22,7 @@ public class Drone : MonoBehaviour
     void Update()
     {
         transform.position = navigation.GetCurrentPosition();
+        targetPos.localPosition = navigation.GetWantedPosition();
 
         if (alerted)
         {
@@ -188,7 +176,7 @@ public class Drone : MonoBehaviour
         {
             if (debug || Tello.state.flying)
             {
-                Debug.Log("Moving forwards");
+                Debug.Log("Drone: Moving forwards");
                 navigation.MoveForwards();
             }
             else
