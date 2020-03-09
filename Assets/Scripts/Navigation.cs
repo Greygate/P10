@@ -17,25 +17,29 @@ public class Navigation : MonoBehaviour
     float droneMovementSpeed;
     bool busy = false;
     bool positionManagerFirstFire = false;
-    bool positionManagerShouldBeRunning = false;
+    bool positionManagerShouldBeRunning = true;
     bool hasSchedulerBeenRun = false; // deleteme
     Queue<Func<IEnumerator>> movements = new Queue<Func<IEnumerator>>(); // deleteme
     NavigationalArray navArray;
 
     private void Start()
     {
+        navArray = new NavigationalArray(GetDronePosition());
+        StartCoroutine(DronePositionManager());
+
+        /*
         Tello.onUpdate += (int newState) =>
         {
             if (!positionManagerShouldBeRunning && Tello.state.flying)
             {
                 positionManagerShouldBeRunning = true;
-                navArray = new NavigationalArray(GetDronePosition());
-                StartCoroutine(DronePositionManager());
+                
             }
             else if (positionManagerShouldBeRunning && !Tello.state.flying)
                 positionManagerShouldBeRunning = false;
                 
         };
+        */
 
         Tello.StartConnecting();
     }

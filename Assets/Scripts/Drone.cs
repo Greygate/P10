@@ -4,6 +4,8 @@ using TelloLib;
 [RequireComponent(typeof(Navigation))]
 public class Drone : MonoBehaviour
 {
+    public bool debug = false;
+
     bool alerted = false;
 
     Navigation navigation;
@@ -158,7 +160,7 @@ public class Drone : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
-            if (Tello.state.flying)
+            if (debug || Tello.state.flying)
             {
                 Debug.Log("Rotating left");
                 navigation.MoveLeft();
@@ -171,7 +173,7 @@ public class Drone : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.RightArrow))
         {
-            if (Tello.state.flying)
+            if (debug || Tello.state.flying)
             {
                 Debug.Log("Rotating right");
                 navigation.MoveRight();
@@ -184,7 +186,7 @@ public class Drone : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.UpArrow))
         {
-            if (Tello.state.flying)
+            if (debug || Tello.state.flying)
             {
                 Debug.Log("Moving forwards");
                 navigation.MoveForwards();
@@ -197,7 +199,7 @@ public class Drone : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.DownArrow))
         {
-            if (Tello.state.flying)
+            if (debug || Tello.state.flying)
             {
                 Debug.Log("Moving backwards");
                 navigation.MoveBackwards();
