@@ -76,6 +76,10 @@ public class Navigation : MonoBehaviour
     {
         return navArray.currentPos;
     }
+    public Vector3 GetStartPosition()
+    {
+        return navArray.startPos;
+    }
 
     IEnumerator PerformMoveForwards()
     {

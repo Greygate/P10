@@ -2,6 +2,7 @@
 using TelloLib;
 
 [RequireComponent(typeof(Navigation))]
+[RequireComponent(typeof(PathVisualizer))]
 public class Drone : MonoBehaviour
 {
     public bool debug = false;
@@ -11,11 +12,13 @@ public class Drone : MonoBehaviour
     bool alerted = false;
 
     Navigation navigation;
+    PathVisualizer pathVisualizer;
 
     // Start is called before the first frame update
     void Start()
     {
         navigation = GetComponent<Navigation>();
+        pathVisualizer = GetComponent<PathVisualizer>();
     }
 
     // Update is called once per frame
@@ -26,7 +29,7 @@ public class Drone : MonoBehaviour
 
         if (alerted)
         {
-            pathVisualizer.CreatePath(new Vector3[] { startPosition, transform.position });
+            pathVisualizer.CreatePath(new Vector3[] { navigation.GetStartPosition(), transform.position });
         }
 
         if (Input.GetKeyDown(KeyCode.Return))
