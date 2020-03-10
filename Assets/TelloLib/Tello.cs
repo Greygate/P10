@@ -638,7 +638,7 @@ namespace TelloLib
                                     //HACK.
                                     //Send file done cmdId to the update listener so it knows the picture is done.
                                     //hack.
-                                    onUpdate(100);
+                                    onUpdate?.Invoke(100);
                                     //hack.
                                     //This is a hack because it is faking a message. And not a very good fake.
                                     //HACK.

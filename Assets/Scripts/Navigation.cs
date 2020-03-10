@@ -22,16 +22,16 @@ public class Navigation : MonoBehaviour
     Queue<Func<IEnumerator>> movements = new Queue<Func<IEnumerator>>(); // deleteme
     NavigationalArray navArray;
 
-    private void Start()
-    {
-        navArray = new NavigationalArray(GetDronePosition());
-        StartCoroutine(DronePositionManager());
-    }
-
     void Update()
     {
         droneMovementSpeed = movementSpeed / 100;
         Tello.SetMaxHeight(height);
+    }
+
+    public void InitializeNavigation()
+    {
+        navArray = new NavigationalArray(GetDronePosition());
+        StartCoroutine(DronePositionManager());
     }
 
     public void MoveForwards()
