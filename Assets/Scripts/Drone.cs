@@ -19,14 +19,35 @@ public class Drone : MonoBehaviour
 
     void Awake()
     {
+        navigation = GetComponent<Navigation>();
+        pathVisualizer = GetComponent<PathVisualizer>();
+
         Tello.onConnection += (ConnectionState state) =>
         {
-            Tello.SetPicVidMode(0);
-            StartCoroutine(ScanForHumans());
+            Debug.Log($"Tello Connection: {state}");
+            switch (state)
+            {
+                case ConnectionState.Disconnected:
+                case ConnectionState.Paused:
+                    StopCoroutine(ScanForHumans());
+                    break;
+                case ConnectionState.Connected:
+                    Tello.SetPicVidMode(0);
+                    StartCoroutine(ScanForHumans());
+                    navigation.InitializeNavigation();
+                    break;
+                case ConnectionState.UnPausing:
+                    StartCoroutine(ScanForHumans());
+                    break;
+                default:
+                    break;
+            }
         };
 
         Tello.onUpdate += (int newState) =>
         {
+            Debug.Log($"UPDATE: New state {newState}");
+
             if (newState == 100)
             {
                 //Image is done
@@ -38,19 +59,15 @@ public class Drone : MonoBehaviour
         Tello.StartConnecting();
     }
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        navigation = GetComponent<Navigation>();
-        pathVisualizer = GetComponent<PathVisualizer>();
-    }
-
     // Update is called once per frame
     void Update()
     {
-        transform.position = navigation.GetCurrentPosition();
-        targetPos.localPosition = navigation.GetWantedPosition();
-
+        if (Tello.Connected)
+        {
+            transform.position = navigation.GetCurrentPosition();
+            targetPos.localPosition = navigation.GetWantedPosition();
+        }
+        
         if (alerted)
         {
             if (!hasPath)
