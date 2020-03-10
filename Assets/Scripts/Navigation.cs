@@ -26,22 +26,6 @@ public class Navigation : MonoBehaviour
     {
         navArray = new NavigationalArray(GetDronePosition());
         StartCoroutine(DronePositionManager());
-
-        /*
-        Tello.onUpdate += (int newState) =>
-        {
-            if (!positionManagerShouldBeRunning && Tello.state.flying)
-            {
-                positionManagerShouldBeRunning = true;
-                
-            }
-            else if (positionManagerShouldBeRunning && !Tello.state.flying)
-                positionManagerShouldBeRunning = false;
-                
-        };
-        */
-
-        Tello.StartConnecting();
     }
 
     void Update()

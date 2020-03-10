@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using TelloLib;
+using OpenCvSharp;
+using System.Collections;
 
 [RequireComponent(typeof(Navigation))]
 [RequireComponent(typeof(PathVisualizer))]
@@ -14,6 +16,27 @@ public class Drone : MonoBehaviour
 
     Navigation navigation;
     PathVisualizer pathVisualizer;
+
+    void Awake()
+    {
+        Tello.onConnection += (ConnectionState state) =>
+        {
+            Tello.SetPicVidMode(0);
+            StartCoroutine(ScanForHumans());
+        };
+
+        Tello.onUpdate += (int newState) =>
+        {
+            if (newState == 100)
+            {
+                //Image is done
+                if (DetectHuman(new Mat(Tello.picFilePath)))
+                    alerted = true;
+            }
+        };
+
+        Tello.StartConnecting();
+    }
 
     // Start is called before the first frame update
     void Start()
@@ -222,5 +245,28 @@ public class Drone : MonoBehaviour
     void OnApplicationQuit()
     {
         Tello.StopConnecting();
+    }
+
+    IEnumerator ScanForHumans()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(5);
+            Tello.TakePicture();
+        }
+    }
+
+    public bool DetectHuman(Mat image)
+    {
+        OpenCvSharp.Rect[] regions;
+
+        using (HOGDescriptor des = new HOGDescriptor())
+        {
+            des.SetSVMDetector(HOGDescriptor.GetDefaultPeopleDetector());
+
+            regions = des.DetectMultiScale(image);
+        }
+
+        return regions.Length > 0;
     }
 }
