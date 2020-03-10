@@ -83,9 +83,10 @@ public class Drone : MonoBehaviour
                     Debug.LogError("Battery too low for take off");
                     return;
                 }
-
-                if (Tello.state.batteryLow)
+                else if (Tello.state.batteryLow)
+                {
                     Debug.LogWarning("Battery low");
+                }
 
                 Debug.Log("Taking off");
                 Tello.TakeOff();
