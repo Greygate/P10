@@ -54,15 +54,15 @@ public class Navigation : MonoBehaviour
 
     public Vector3 GetCurrentPosition()
     {
-        return GetDronePosition() - navArray.startPos;
+        return navArray != null ? GetDronePosition() - navArray.startPos : new Vector3(0, 0, 0);
     }
     public Vector3 GetWantedPosition()
     {
-        return navArray.currentPos;
+        return navArray != null ? navArray.currentPos : new Vector3(0, 0, 0);
     }
     public Vector3 GetStartPosition()
     {
-        return navArray.startPos;
+        return navArray != null ? navArray.startPos : new Vector3(0, 0, 0);
     }
 
     IEnumerator PerformMoveForwards()

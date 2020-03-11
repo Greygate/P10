@@ -490,11 +490,11 @@ namespace TelloLib
                         {
                             if(received.Message.StartsWith("conn_ack"))
                             {
-                                ConnectionState = ConnectionState.Connected;
-                                Connected = true;
-
                                 StartHeartbeat();
                                 RequestIframe();
+
+                                ConnectionState = ConnectionState.Connected;
+                                Connected = true;
                                 continue;
                             }
                         }
@@ -635,6 +635,12 @@ namespace TelloLib
 
                                     SendAckFileDone((int)picBytesExpected);
 
+                                    //Save raw data minus sequence.
+                                    using (var stream = new FileStream(picFilePath, FileMode.Append))
+                                    {
+                                        stream.Write(picbuffer, 0, (int)picBytesExpected);
+                                    }
+
                                     //HACK.
                                     //Send file done cmdId to the update listener so it knows the picture is done.
                                     //hack.
@@ -644,12 +650,6 @@ namespace TelloLib
                                     //HACK.
 
                                     Console.WriteLine("\nDONE PN:" + pieceNum + " max: " + maxPieceNum);
-
-                                    //Save raw data minus sequence.
-                                    using (var stream = new FileStream(picFilePath, FileMode.Append))
-                                    {
-                                        stream.Write(picbuffer, 0, (int)picBytesExpected);
-                                    }
                                 }
                             }
                             else

@@ -11,6 +11,7 @@ public class Drone : MonoBehaviour
     [SerializeField]
     Transform targetPos;
 
+    bool scanFrame = false;
     bool alerted = false;
     bool hasPath = false;
 
@@ -22,45 +23,65 @@ public class Drone : MonoBehaviour
         navigation = GetComponent<Navigation>();
         pathVisualizer = GetComponent<PathVisualizer>();
 
-        Tello.onConnection += (ConnectionState state) =>
+        Tello.onConnection += (state) =>
         {
             Debug.Log($"Tello Connection: {state}");
             switch (state)
             {
                 case ConnectionState.Disconnected:
                 case ConnectionState.Paused:
-                    //StopCoroutine(ScanForHumans());
+                    StopCoroutine(ScanForHumans());
                     break;
                 case ConnectionState.Connected:
-
-                    //Tello.SetPicVidMode(0);
-                    //StartCoroutine(ScanForHumans());
-                    //navigation.InitializeNavigation();
+                    StartCoroutine(ScanForHumans());
+                    navigation.InitializeNavigation();
                     break;
                 case ConnectionState.UnPausing:
-                    //StartCoroutine(ScanForHumans());
+                    StartCoroutine(ScanForHumans());
                     break;
                 default:
                     break;
             }
         };
 
-        Tello.onUpdate += (int newState) =>
+        Tello.onUpdate += (newState) =>
         {
             Debug.Log($"UPDATE: New state {newState}");
-
+            /*
             if (newState == 100)
             {
                 //Image is done
                 if (DetectHuman(new Mat(Tello.picFilePath)))
                 {
                     alerted = true;
-                    Debug.Log("No human found");
+                    Debug.Log("Human found");
                 }
                 else
                 {
                     Debug.Log("No human found");
                 }
+                watch.Stop();
+                Debug.Log($"Picture took {watch.Elapsed.ToString()} to finish");
+            }
+            */
+        };
+
+        Tello.onVideoData += (data) =>
+        {
+            Debug.Log("Video data received!");
+            if (!scanFrame)
+                return;// skip if we don't want to scan this frame
+
+            scanFrame = false;
+
+            if (DetectHuman(Cv2.ImDecode(data, ImreadModes.Color)))
+            {
+                alerted = true;
+                Debug.Log("Human found");
+            }
+            else
+            {
+                Debug.Log("No human found");
             }
         };
 
@@ -70,7 +91,7 @@ public class Drone : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Tello.Connected)
+        if (navigation)
         {
             transform.position = navigation.GetCurrentPosition();
             targetPos.localPosition = navigation.GetWantedPosition();
@@ -117,98 +138,6 @@ public class Drone : MonoBehaviour
                 Tello.TakeOff();
             }
         }
-
-        // DELETE EVERYTHING BETWEEN ME
-        if (Input.GetKeyDown(KeyCode.T))
-        {
-            if (Tello.state.flying)
-            {
-                Tello.controllerState.SetAxis(1, 0, 0, 0);
-            }
-            else
-            {
-                Debug.Log("Can't perform any actions when the drone is not flying... duh..");
-            }
-        }
-        if (Input.GetKeyDown(KeyCode.Y))
-        {
-            if (Tello.state.flying)
-            {
-                Tello.controllerState.SetAxis(0, 0, 0, 0);
-            }
-            else
-            {
-                Debug.Log("Can't perform any actions when the drone is not flying... duh..");
-            }
-        }
-        if (Input.GetKeyDown(KeyCode.I))
-        {
-            if (Tello.state.flying)
-            {
-                Tello.controllerState.SetAxis(0, 1, 0, 0);
-            }
-            else
-            {
-                Debug.Log("Can't perform any actions when the drone is not flying... duh..");
-            }
-        }
-        if (Input.GetKeyDown(KeyCode.O))
-        {
-            if (Tello.state.flying)
-            {
-                Tello.controllerState.SetAxis(0, 0, 0, 0);
-            }
-            else
-            {
-                Debug.Log("Can't perform any actions when the drone is not flying... duh..");
-            }
-        }
-        if (Input.GetKeyDown(KeyCode.G))
-        {
-            if (Tello.state.flying)
-            {
-                Tello.controllerState.SetAxis(0, 0, 1, 0);
-            }
-            else
-            {
-                Debug.Log("Can't perform any actions when the drone is not flying... duh..");
-            }
-        }
-        if (Input.GetKeyDown(KeyCode.H))
-        {
-            if (Tello.state.flying)
-            {
-                Tello.controllerState.SetAxis(0, 0, 0, 0);
-            }
-            else
-            {
-                Debug.Log("Can't perform any actions when the drone is not flying... duh..");
-            }
-        }
-        if (Input.GetKeyDown(KeyCode.J))
-        {
-            if (Tello.state.flying)
-            {
-                Tello.controllerState.SetAxis(0, 0, 0, 1);
-            }
-            else
-            {
-                Debug.Log("Can't perform any actions when the drone is not flying... duh..");
-            }
-        }
-        if (Input.GetKeyDown(KeyCode.K))
-        {
-            if (Tello.state.flying)
-            {
-                Tello.controllerState.SetAxis(0, 0, 0, 0);
-            }
-            else
-            {
-                Debug.Log("Can't perform any actions when the drone is not flying... duh..");
-            }
-        }
-
-        // AND ME
 
         if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
@@ -278,7 +207,10 @@ public class Drone : MonoBehaviour
         while (true)
         {
             yield return new WaitForSeconds(5);
-            Tello.TakePicture();
+            if (scanFrame)
+                continue;// If we are already requesting a frame we just wait again
+            scanFrame = true;
+            //Tello.TakePicture();
         }
     }
 
