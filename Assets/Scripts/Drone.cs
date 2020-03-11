@@ -12,6 +12,7 @@ public class Drone : MonoBehaviour
     Transform targetPos;
 
     bool scanFrame = false;
+    bool scanningFrame = false;
     bool alerted = false;
     bool hasPath = false;
 
@@ -69,9 +70,10 @@ public class Drone : MonoBehaviour
         Tello.onVideoData += (data) =>
         {
             Debug.Log("Video data received!");
-            if (!scanFrame)
+            if (!scanFrame || scanningFrame)
                 return;// skip if we don't want to scan this frame
 
+            scanningFrame = true;
             scanFrame = false;
 
             if (DetectHuman(Cv2.ImDecode(data, ImreadModes.Color)))
@@ -207,8 +209,8 @@ public class Drone : MonoBehaviour
         while (true)
         {
             yield return new WaitForSeconds(5);
-            if (scanFrame)
-                continue;// If we are already requesting a frame we just wait again
+            if (scanFrame || scanningFrame)
+                continue;// If we are already requesting a frame, or currently scanning a frame, we just wait again
             scanFrame = true;
             //Tello.TakePicture();
         }
