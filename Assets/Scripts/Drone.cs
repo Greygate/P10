@@ -29,15 +29,16 @@ public class Drone : MonoBehaviour
             {
                 case ConnectionState.Disconnected:
                 case ConnectionState.Paused:
-                    StopCoroutine(ScanForHumans());
+                    //StopCoroutine(ScanForHumans());
                     break;
                 case ConnectionState.Connected:
-                    Tello.SetPicVidMode(0);
-                    StartCoroutine(ScanForHumans());
-                    navigation.InitializeNavigation();
+
+                    //Tello.SetPicVidMode(0);
+                    //StartCoroutine(ScanForHumans());
+                    //navigation.InitializeNavigation();
                     break;
                 case ConnectionState.UnPausing:
-                    StartCoroutine(ScanForHumans());
+                    //StartCoroutine(ScanForHumans());
                     break;
                 default:
                     break;
@@ -52,7 +53,14 @@ public class Drone : MonoBehaviour
             {
                 //Image is done
                 if (DetectHuman(new Mat(Tello.picFilePath)))
+                {
                     alerted = true;
+                    Debug.Log("No human found");
+                }
+                else
+                {
+                    Debug.Log("No human found");
+                }
             }
         };
 
